@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\AuditLogAdminController;
+use App\Http\Controllers\Admin\ExhibitionAdminController;
 use App\Http\Controllers\Admin\MerchandiseAdminController;
 use App\Http\Controllers\ArtistDashboardController;
 use App\Http\Controllers\ArtistProfileController;
@@ -10,7 +12,6 @@ use App\Http\Controllers\Auth\BuyerRegisterController;
 use App\Http\Controllers\BidController;
 use App\Http\Controllers\BuyerListController;
 use App\Http\Controllers\CartController;
-use App\Http\Controllers\MerchandiseController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -41,7 +42,7 @@ Route::post('/register/buyer', [BuyerRegisterController::class, 'store']);
 Route::get('/register/artist', [ArtistRegisterController::class, 'create'])->name('register.artist');
 Route::post('/register/artist', [ArtistRegisterController::class, 'store']);
 
-// ============ KERANJANG (bisa dipakai tanpa login untuk lihat isi) ============
+// ============ KERANJANG ============
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart/{artwork}', [CartController::class, 'add'])->name('cart.add');
@@ -50,11 +51,20 @@ Route::delete('/cart/{artwork}', [CartController::class, 'remove'])->name('cart.
 // ============ HALAMAN YANG WAJIB LOGIN ============
 
 Route::middleware('auth')->group(function () {
-    // Bid / lelang — hanya buyer
+
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->middleware('verified')->name('dashboard');
+
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
     Route::post('/artworks/{artwork}/bid', [BidController::class, 'store'])
         ->middleware('role:buyer')->name('bids.store');
+    Route::delete('/bids/{bid}', [BidController::class, 'destroy'])
+        ->middleware('role:buyer')->name('bids.destroy');
 
-    // Checkout & pembayaran
     Route::get('/checkout/{artwork}', [OrderController::class, 'checkout'])
         ->middleware('role:buyer')->name('checkout.show');
     Route::post('/checkout/cart', [OrderController::class, 'checkoutCart'])
@@ -63,7 +73,6 @@ Route::middleware('auth')->group(function () {
         ->middleware('role:buyer')->name('merchandise.checkout');
     Route::get('/orders/{order}/success', [OrderController::class, 'success'])->name('orders.success');
 
-    // Dashboard artis
     Route::get('/dashboard/artist', [ArtistDashboardController::class, 'index'])
         ->middleware('role:artist')->name('dashboard.artist');
     Route::post('/dashboard/artist/artworks', [ArtistDashboardController::class, 'store'])
@@ -71,7 +80,6 @@ Route::middleware('auth')->group(function () {
     Route::delete('/dashboard/artist/artworks/{artwork}', [ArtistDashboardController::class, 'destroy'])
         ->middleware('role:artist')->name('dashboard.artist.destroy');
 
-    // Admin panel
     Route::prefix('admin')->middleware('role:admin')->group(function () {
         Route::get('/', [AdminController::class, 'dashboard'])->name('admin.dashboard');
         Route::post('/artworks/{artwork}/approve', [AdminController::class, 'approveArtwork'])->name('admin.artworks.approve');
@@ -81,10 +89,17 @@ Route::middleware('auth')->group(function () {
         Route::post('/merchandise', [MerchandiseAdminController::class, 'store'])->name('admin.merchandise.store');
         Route::patch('/merchandise/{merchandise}', [MerchandiseAdminController::class, 'update'])->name('admin.merchandise.update');
         Route::delete('/merchandise/{merchandise}', [MerchandiseAdminController::class, 'destroy'])->name('admin.merchandise.destroy');
+
+        Route::get('/exhibitions', [ExhibitionAdminController::class, 'index'])->name('admin.exhibitions.index');
+        Route::post('/exhibitions', [ExhibitionAdminController::class, 'store'])->name('admin.exhibitions.store');
+        Route::patch('/exhibitions/{exhibition}', [ExhibitionAdminController::class, 'update'])->name('admin.exhibitions.update');
+        Route::delete('/exhibitions/{exhibition}', [ExhibitionAdminController::class, 'destroy'])->name('admin.exhibitions.destroy');
+
+        Route::get('/audit-logs', [AuditLogAdminController::class, 'index'])->name('admin.audit-logs.index');
     });
 });
 
-// ============ WEBHOOK PEMBAYARAN (tanpa auth, dipanggil server Midtrans) ============
+// ============ WEBHOOK PEMBAYARAN ============
 
 Route::post('/payment/notification', [OrderController::class, 'notification'])->name('payment.notification');
 

@@ -35,9 +35,20 @@ class Artwork extends Model
         return $this->belongsTo(Exhibition::class);
     }
 
+    /**
+     * Hanya bid yang masih aktif (belum dibatalkan), diurutkan dari tertinggi.
+     */
     public function bids()
     {
-        return $this->hasMany(Bid::class)->orderByDesc('amount');
+        return $this->hasMany(Bid::class)->where('is_cancelled', false)->orderByDesc('amount');
+    }
+
+    /**
+     * Semua bid termasuk yang sudah dibatalkan (untuk riwayat/audit).
+     */
+    public function allBids()
+    {
+        return $this->hasMany(Bid::class)->orderByDesc('created_at');
     }
 
     public function order()
@@ -53,6 +64,11 @@ class Artwork extends Model
     public function isAuctionOpen(): bool
     {
         if (! $this->is_auction) {
+            return false;
+        }
+
+        // Lelang mengikuti waktu pameran: kalau pameran sudah tutup, lelang otomatis tutup juga.
+        if ($this->exhibition && ! $this->exhibition->isOpen()) {
             return false;
         }
 

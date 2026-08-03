@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Artwork;
+use App\Models\AuditLog;
 use App\Models\Order;
-use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
@@ -21,12 +21,16 @@ class AdminController extends Controller
     {
         $artwork->update(['status' => 'approved']);
 
+        AuditLog::record('artwork.approved', $artwork, ['title' => $artwork->title]);
+
         return back()->with('status', 'Karya "'.$artwork->title.'" disetujui dan tayang di katalog.');
     }
 
     public function rejectArtwork(Artwork $artwork)
     {
         $artwork->update(['status' => 'rejected']);
+
+        AuditLog::record('artwork.rejected', $artwork, ['title' => $artwork->title]);
 
         return back()->with('status', 'Karya "'.$artwork->title.'" ditolak.');
     }

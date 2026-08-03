@@ -12,11 +12,15 @@ class Order extends Model
     protected $fillable = [
         'order_code', 'artwork_id', 'merchandise_id', 'quantity', 'buyer_id', 'final_price',
         'payment_status', 'payment_method', 'midtrans_transaction_id', 'payment_proof_path',
+        'claim_deadline',
     ];
 
     protected function casts(): array
     {
-        return ['final_price' => 'decimal:2'];
+        return [
+            'final_price' => 'decimal:2',
+            'claim_deadline' => 'datetime',
+        ];
     }
 
     public function artwork()

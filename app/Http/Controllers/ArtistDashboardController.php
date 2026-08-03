@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Artwork;
+use App\Models\AuditLog;
 use App\Models\Exhibition;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -12,9 +12,10 @@ class ArtistDashboardController extends Controller
     public function index(Request $request)
     {
         $artworks = $request->user()->artworks()->with('exhibition')->latest()->get();
-        $exhibitions = Exhibition::orderByDesc('start_date')->get();
 
-        return view('dashboard.artist', compact('artworks', 'exhibitions'));
+        $openExhibitions = Exhibition::open()->get();
+
+        return view('dashboard.artist', compact('artworks', 'openExhibitions'));
     }
 
     public function store(Request $request)
@@ -25,31 +26,46 @@ class ArtistDashboardController extends Controller
             'medium' => ['nullable', 'string', 'max:255'],
             'size' => ['nullable', 'string', 'max:100'],
             'starting_price' => ['required', 'numeric', 'min:0'],
-            'is_auction' => ['required', 'boolean'],
+            'is_auction' => ['nullable', 'boolean'],
             'auction_ends_at' => ['nullable', 'date', 'after:now'],
-            'exhibition_id' => ['nullable', 'exists:exhibitions,id'],
-            'image' => ['required', 'image', 'max:4096'], // maks 4MB
+            'exhibition_id' => ['required', 'exists:exhibitions,id'],
+            'image' => ['required', 'image', 'max:4096'],
         ]);
 
-        $path = $request->file('image')->store('artworks', 'public');
+        $exhibition = Exhibition::findOrFail($data['exhibition_id']);
+        abort_unless($exhibition->isOpen(), 422, 'Pameran ini sedang tidak menerima pendaftaran karya baru.');
 
-        $request->user()->artworks()->create([
+        // Simpan gambar ke disk default (MinIO kalau sudah dikonfigurasi, atau 'public' kalau belum)
+        $path = $request->file('image')->store('artworks', config('filesystems.default'));
+
+        $artwork = $request->user()->artworks()->create([
             ...$data,
+            'is_auction' => $request->boolean('is_auction'),
             'image_path' => $path,
             'current_price' => $data['starting_price'],
-            'status' => 'pending', // menunggu verifikasi admin
+            'status' => 'pending',
+        ]);
+
+        AuditLog::record('artwork.submitted', $artwork, [
+            'title' => $artwork->title,
+            'exhibition' => $exhibition->title,
         ]);
 
         return back()->with('status', 'Karya berhasil diunggah dan menunggu verifikasi admin.');
     }
 
-    public function destroy(Artwork $artwork)
+    public function destroy(\App\Models\Artwork $artwork)
     {
         abort_unless($artwork->artist_id === auth()->id(), 403);
 
         if ($artwork->image_path) {
-            Storage::disk('public')->delete($artwork->image_path);
+            Storage::disk(config('filesystems.default'))->delete($artwork->image_path);
         }
+
+        AuditLog::record('artwork.deleted_by_artist', null, [
+            'title' => $artwork->title,
+            'artwork_id' => $artwork->id,
+        ]);
 
         $artwork->delete();
 

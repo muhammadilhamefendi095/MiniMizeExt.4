@@ -4,18 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? 'MINI MIZE EXT.4 — Art Exhibition & Auction' }}</title>
-    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}?v={{ filemtime(public_path('css/style.css')) }}">
 </head>
 <body>
 
     <nav class="navbar entry-fade">
         <div class="logo-container">
-            <a href="{{ route('home') }}" style="color:#FFF200; font-weight:900; letter-spacing:1px; text-decoration:none; font-size:1.1rem;">
-                MINI MIZE EXT.4
+            <a href="{{ route('home') }}" class="logo-link">
+                <img src="{{ asset('images/IMG_5824.png') }}" alt="MINI MIZE EXT.4 Logo" class="nav-logo">
             </a>
         </div>
         <ul class="nav-links">
-            <li><a href="{{ route('catalog.index') }}" class="nav-link-item">Katalog</a></li>
+            <li><a href="{{ route('catalog.index') }}" class="nav-link-item">Pameran</a></li>
             <li><a href="{{ route('home') }}#merchandise" class="nav-link-item">Merchandise</a></li>
             <li><a href="{{ route('buyers.index') }}" class="nav-link-item">Kolektor</a></li>
 
@@ -27,11 +27,13 @@
 
             @auth
                 @if (auth()->user()->role === 'artist')
-                    <li><a href="{{ route('dashboard.artist') }}" class="nav-link-item">Dashboard Artis</a></li>
+                    <li><a href="{{ route('dashboard.artist') }}" class="nav-link-item">Dashboard</a></li>
                 @endif
                 @if (auth()->user()->role === 'admin')
                     <li><a href="{{ route('admin.dashboard') }}" class="nav-link-item">Admin</a></li>
-                    <li><a href="{{ route('admin.merchandise.index') }}" class="nav-link-item">Kelola Merch</a></li>
+                    <li><a href="{{ route('admin.exhibitions.index') }}" class="nav-link-item">Pameran</a></li>
+                    <li><a href="{{ route('admin.merchandise.index') }}" class="nav-link-item">Merch</a></li>
+                    <li><a href="{{ route('admin.audit-logs.index') }}" class="nav-link-item">Audit Log</a></li>
                 @endif
                 <li><a href="#" id="cart-btn" class="cart-trigger-btn">Keranjang ({{ count(session('cart', [])) }})</a></li>
                 <li>

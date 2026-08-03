@@ -13,6 +13,10 @@
                     Oleh: {{ $artwork->artist->name }}
                 </a>
 
+                @if ($artwork->exhibition)
+                    <p style="color:#666; font-size:0.8rem; margin-top:8px;">Pameran: {{ $artwork->exhibition->title }}</p>
+                @endif
+
                 <p style="color:#AAA; margin:25px 0; line-height:1.7;">{{ $artwork->description }}</p>
 
                 <div style="display:flex; gap:30px; color:#777; font-size:0.85rem; margin-bottom:25px;">
@@ -58,8 +62,14 @@
 
                         @auth
                             @if ($artwork->order && $artwork->order->buyer_id === auth()->id() && $artwork->order->payment_status === 'pending')
-                                <div style="margin-top:15px;">
-                                    <p style="color:#FFF200; font-weight:bold; margin-bottom:12px;">Selamat, kamu memenangkan lelang ini!</p>
+                                <div style="margin-top:15px; padding:20px; background:rgba(255,242,0,0.05); border:1px solid rgba(255,242,0,0.2);">
+                                    <p style="color:#FFF200; font-weight:bold; margin-bottom:8px;">Selamat, kamu memenangkan lelang ini!</p>
+                                    @if ($artwork->order->claim_deadline)
+                                        <p style="color:#FF8888; font-size:0.8rem; margin-bottom:12px;">
+                                            Bayar sebelum {{ $artwork->order->claim_deadline->format('d M Y, H:i') }} WIB
+                                            ({{ $artwork->order->claim_deadline->diffForHumans() }}), atau karya ditawarkan ke penawar berikutnya.
+                                        </p>
+                                    @endif
                                     <a href="{{ route('checkout.show', $artwork) }}" class="btn-checkout" style="display:inline-block; padding:16px 30px;">
                                         Bayar Sekarang
                                     </a>
@@ -73,9 +83,19 @@
                             <p style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color:#555; margin-bottom:12px;">Riwayat Tawaran</p>
                             <div style="display:flex; flex-direction:column; gap:8px;">
                                 @foreach ($artwork->bids->take(5) as $bid)
-                                    <div style="display:flex; justify-content:space-between; padding:10px 15px; background:rgba(5,7,11,0.6); font-size:0.85rem;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 15px; background:rgba(5,7,11,0.6); font-size:0.85rem;">
                                         <span>{{ $bid->buyer->name }}</span>
-                                        <span style="color:#FFF200; font-weight:bold;">Rp {{ number_format($bid->amount, 0, ',', '.') }}</span>
+                                        <div style="display:flex; align-items:center; gap:12px;">
+                                            <span style="color:#FFF200; font-weight:bold;">Rp {{ number_format($bid->amount, 0, ',', '.') }}</span>
+                                            @auth
+                                                @if ($bid->buyer_id === auth()->id() && $artwork->isAuctionOpen())
+                                                    <form method="POST" action="{{ route('bids.destroy', $bid) }}" onsubmit="return confirm('Batalkan tawaranmu ini?')">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" style="background:none;border:none;color:#FF5555;cursor:pointer;font-size:0.75rem;">Batalkan</button>
+                                                    </form>
+                                                @endif
+                                            @endauth
+                                        </div>
                                     </div>
                                 @endforeach
                             </div>
