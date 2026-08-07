@@ -8,6 +8,12 @@ Karena Laravel butuh Composer untuk membuat kerangka dasarnya (folder vendor,
 file konfigurasi bawaan, Breeze untuk auth), ikuti urutan di bawah ini persis:
 kamu generate skeleton dulu lewat command, baru tempel file-file custom ini di atasnya.
 
+### Table of Contents
+- [Persiapan tools](#0-persiapan-tools)
+- [Setup project](#1-buat-project-laravel-baru)
+- [Konfigurasi env](#5-konfigurasi-environment-env)
+- [Generate dan instalasi](#6-generate-key-migrasi-storage-link)
+- [MINIO](#10-setup-minio)
 ---
 
 ## 0. Persiapan tools
@@ -215,6 +221,22 @@ Arahkan document root domain ke folder `public/` (bukan root project) — ini pe
 - Beli domain .id/.com (~Rp150-250rb/tahun) di Niagahoster/Rumahweb/Namecheap
 - Pasang SSL gratis (Let's Encrypt, biasanya otomatis tersedia di Hostinger/cPanel)
 
+## 10. Setup Minio
+- Download dan setup minio dulu. Pastikan access bucket publik agar bisa read & write file. Detailnya bisa ditanyakan langsung.
+- Controller yang sudah ada tidak perlu diubah, sudah sesuai standar fleksibel upload.
+- Cuma perlu penyesuaian .env. Contohnya sudah ada di .env.example. Perhatikan bucket yang dibuat di lokal harus disesuaikan namanya.
+
+```
+FILESYSTEM_DISK=s3
+
+AWS_ACCESS_KEY_ID=minioadmin
+AWS_SECRET_ACCESS_KEY=minioadmin
+AWS_DEFAULT_REGION=us-east-1
+AWS_BUCKET=<nama-bucket-yang-dibuat>
+AWS_USE_PATH_STYLE_ENDPOINT=true
+AWS_ENDPOINT=http://localhost:9000
+AWS_URL=http://localhost:9000/<nama-bucket-yang-dibuat>
+```
 ---
 
 ## Ringkasan alur bisnis yang sudah dibuatkan
