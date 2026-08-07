@@ -56,7 +56,8 @@ class ArtistDashboardController extends Controller
 
     public function destroy(\App\Models\Artwork $artwork)
     {
-        abort_unless($artwork->artist_id === auth()->id(), 403);
+        abort_unless($artwork->artist_id === auth()->id(), 403); // ini diganti sama yang bawah mungkin? tapi valid ji sih
+        $this->authorize('delete', $artwork);
 
         if ($artwork->image_path) {
             Storage::disk(config('filesystems.default'))->delete($artwork->image_path);

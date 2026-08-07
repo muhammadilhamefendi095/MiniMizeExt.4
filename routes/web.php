@@ -78,7 +78,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/dashboard/artist/artworks', [ArtistDashboardController::class, 'store'])
         ->middleware('role:artist')->name('dashboard.artist.store');
     Route::delete('/dashboard/artist/artworks/{artwork}', [ArtistDashboardController::class, 'destroy'])
-        ->middleware('role:artist')->name('dashboard.artist.destroy');
+        ->middleware('role:artist')->name('dashboard.artist.destroy'); // Palingan di sini tambah policy 
 
     Route::prefix('admin')->middleware('role:admin')->group(function () {
         Route::get('/', [AdminController::class, 'dashboard'])->name('admin.dashboard');

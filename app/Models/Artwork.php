@@ -2,9 +2,13 @@
 
 namespace App\Models;
 
+use App\Policies\ArtworkPolicy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Attributes\UsePolicy;
+// nanti tambah soft delete?
 
+#[UsePolicy(ArtworkPolicy::class)]
 class Artwork extends Model
 {
     use HasFactory;
