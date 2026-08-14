@@ -4,6 +4,12 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        
+        <meta property="og:title" content="Minimize Exhibition">
+        <meta property="og:description" content="Platform pameran karya yang menghadirkan beragam karya pilihan dengan sistem bidding untuk para kolektor dan penikmat karya">
+        <meta property="og:image" content="{{ url('images/hero-1.jpg')}}">
+        <meta property="og:url" content="{{  url()->current() }}">
+        <meta property="og:type" content="website">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
